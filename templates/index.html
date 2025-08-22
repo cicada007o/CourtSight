@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}BNS Legal Assistant - AI-Powered Legal Consultation{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section bg-gradient-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-balance-scale me-3"></i>
+                    BNS Legal Assistant
+                </h1>
+                <p class="lead mb-4">
+                    Get instant, AI-powered legal consultation based on the Bharatiya Nyaya Sanhita (BNS) 2023. 
+                    Understanding criminal law has never been easier.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('chat') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-comments me-2"></i>Start Consultation
+                    </a>
+                    <button class="btn btn-outline-light btn-lg" onclick="scrollToFeatures()">
+                        <i class="fas fa-info-circle me-2"></i>Learn More
+                    </button>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="hero-illustration">
+                    <i class="fas fa-gavel text-white-50" style="font-size: 12rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- System Status Section -->
+{% if not system_ready %}
+<section class="system-status-section py-3 bg-warning">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-1 text-center">
+                {% if initialization_status.status == 'in_progress' %}
+                    <div class="spinner-border spinner-border-sm text-dark" role="status"></div>
+                {% elif initialization_status.status == 'error' %}
+                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                {% else %}
+                    <i class="fas fa-hourglass-half text-dark"></i>
+                {% endif %}
+            </div>
+            <div class="col-md-11">
+                <strong>System Status:</strong> 
+                {{ initialization_status.message }}
+                {% if initialization_status.status == 'error' %}
+                    <button class="btn btn-sm btn-outline-dark ms-2" onclick="reinitializeSystem()">
+                        <i class="fas fa-redo me-1"></i>Retry
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Features Section -->
+<section id="features" class="features-section py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="h1 fw-bold">Advanced Legal AI Features</h2>
+            <p class="lead text-muted">Powered by cutting-edge RAG technology and comprehensive BNS knowledge</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card h-100 p-4 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-search text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>Intelligent Search</h4>
+                    <p class="text-muted">
+                        Advanced semantic search combines with keyword matching to find the most relevant 
+                        BNS sections for your legal queries.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card h-100 p-4 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-brain text-success" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>AI-Powered Analysis</h4>
+                    <p class="text-muted">
+                        OpenAI GPT processes legal documents with understanding of context, cross-references, 
+                        and legal implications.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card h-100 p-4 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-quote-left text-info" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>Source Citation</h4>
+                    <p class="text-muted">
+                        Every response includes precise citations to BNS sections, ensuring transparency 
+                        and verifiability of legal information.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card h-100 p-4 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-shield-alt text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>Confidence Scoring</h4>
+                    <p class="text-muted">
+                        AI confidence levels help you understand the reliability of each response, 
+                        promoting informed decision-making.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card h-100 p-4 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-mobile-alt text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>Responsive Design</h4>
+                    <p class="text-muted">
+                        Access legal consultation from any device - desktop, tablet, or mobile - 
+                        with a fully responsive interface.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card h-100 p-4 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-clock text-secondary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>24/7 Availability</h4>
+                    <p class="text-muted">
+                        Get legal information anytime, anywhere. No appointment needed - 
+                        instant responses to your legal questions.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works-section py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="h1 fw-bold">How It Works</h2>
+            <p class="lead text-muted">Understanding the technology behind intelligent legal consultation</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="step-card text-center">
+                    <div class="step-number">1</div>
+                    <h4>Ask Your Question</h4>
+                    <p class="text-muted">
+                        Type your legal question in natural language. Our system understands complex legal queries.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="step-card text-center">
+                    <div class="step-number">2</div>
+                    <h4>Smart Retrieval</h4>
+                    <p class="text-muted">
+                        AI searches through BNS documents using advanced retrieval techniques to find relevant sections.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="step-card text-center">
+                    <div class="step-number">3</div>
+                    <h4>AI Analysis</h4>
+                    <p class="text-muted">
+                        OpenAI GPT analyzes the retrieved content and generates comprehensive, contextual responses.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="step-card text-center">
+                    <div class="step-number">4</div>
+                    <h4>Get Answer</h4>
+                    <p class="text-muted">
+                        Receive detailed answers with source citations, confidence scores, and practical guidance.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Example Queries Section -->
+<section class="examples-section py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="h1 fw-bold">Example Legal Queries</h2>
+            <p class="lead text-muted">Try these sample questions to explore the system's capabilities</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="example-card p-4">
+                    <h5><i class="fas fa-question-circle text-primary me-2"></i>Definitions</h5>
+                    <p class="text-muted mb-3">Get clear explanations of legal terms</p>
+                    <div class="example-query">
+                        "What is the definition of theft under BNS?"
+                    </div>
+                    <a href="{{ url_for('chat') }}" class="btn btn-outline-primary btn-sm mt-2">Try This Query</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="example-card p-4">
+                    <h5><i class="fas fa-gavel text-success me-2"></i>Penalties</h5>
+                    <p class="text-muted mb-3">Learn about punishments and sentences</p>
+                    <div class="example-query">
+                        "What is the punishment for assault under BNS?"
+                    </div>
+                    <a href="{{ url_for('chat') }}" class="btn btn-outline-success btn-sm mt-2">Try This Query</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="example-card p-4">
+                    <h5><i class="fas fa-list-ol text-info me-2"></i>Procedures</h5>
+                    <p class="text-muted mb-3">Understand legal processes and steps</p>
+                    <div class="example-query">
+                        "What is the procedure for filing a complaint?"
+                    </div>
+                    <a href="{{ url_for('chat') }}" class="btn btn-outline-info btn-sm mt-2">Try This Query</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="example-card p-4">
+                    <h5><i class="fas fa-book text-warning me-2"></i>Sections</h5>
+                    <p class="text-muted mb-3">Get detailed explanations of BNS sections</p>
+                    <div class="example-query">
+                        "Explain Section 103 of BNS"
+                    </div>
+                    <a href="{{ url_for('chat') }}" class="btn btn-outline-warning btn-sm mt-2">Try This Query</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About BNS Section -->
+<section id="about" class="about-section py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="h1 fw-bold mb-4">About Bharatiya Nyaya Sanhita 2023</h2>
+                <p class="lead">
+                    The Bharatiya Nyaya Sanhita (BNS) 2023 is India's new comprehensive criminal code that 
+                    replaced the colonial-era Indian Penal Code (IPC) 1860.
+                </p>
+                <p>
+                    This modernized legal framework reflects contemporary Indian values and addresses 
+                    current social realities while maintaining the fundamental principles of justice. 
+                    The BNS introduces new offences, updates existing definitions, and streamlines 
+                    legal procedures for better access to justice.
+                </p>
+                <div class="row mt-4">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <div class="display-6 fw-bold text-primary">500+</div>
+                            <small class="text-muted">Legal Sections</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <div class="display-6 fw-bold text-success">2023</div>
+                            <small class="text-muted">Year Enacted</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-university text-primary" style="font-size: 12rem; opacity: 0.1;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Legal Disclaimer Section -->
+<section id="disclaimer" class="disclaimer-section py-5 bg-warning">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h3 class="fw-bold mb-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Important Legal Disclaimer
+                </h3>
+                <p class="lead mb-4">
+                    This AI-powered system provides general legal information for educational purposes only. 
+                    It is not intended as legal advice and should not be used as a substitute for consulting 
+                    with qualified legal professionals.
+                </p>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="disclaimer-point">
+                            <i class="fas fa-user-tie text-dark mb-2" style="font-size: 2rem;"></i>
+                            <h6>Consult Professionals</h6>
+                            <small>Always seek advice from qualified lawyers for specific legal matters.</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="disclaimer-point">
+                            <i class="fas fa-balance-scale text-dark mb-2" style="font-size: 2rem;"></i>
+                            <h6>Legal Complexity</h6>
+                            <small>Legal matters involve complex factors that AI cannot fully assess.</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="disclaimer-point">
+                            <i class="fas fa-clock text-dark mb-2" style="font-size: 2rem;"></i>
+                            <h6>Information Currency</h6>
+                            <small>Laws may change. Verify current legal provisions with experts.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="cta-section py-5 bg-gradient-primary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h3 class="h1 fw-bold mb-3">Ready to Explore BNS 2023?</h3>
+                <p class="lead mb-0">
+                    Start your legal consultation journey with AI-powered insights into India's criminal law.
+                </p>
+            </div>
+            <div class="col-lg-4 text-center">
+                <a href="{{ url_for('chat') }}" class="btn btn-light btn-lg px-5 py-3">
+                    <i class="fas fa-rocket me-2"></i>Get Started Now
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function scrollToFeatures() {
+    document.getElementById('features').scrollIntoView({ 
+        behavior: 'smooth' 
+    });
+}
+
+function reinitializeSystem() {
+    fetch('/api/initialize', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Failed to reinitialize system: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to reinitialize system');
+    });
+}
+
+// Auto-refresh page if system is initializing
+{% if initialization_status.status == 'in_progress' %}
+setTimeout(() => {
+    location.reload();
+}, 5000);
+{% endif %}
+</script>
+{% endblock %}

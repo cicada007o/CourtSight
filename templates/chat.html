@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+
+{% block title %}Legal Consultation Chat - BNS Legal Assistant{% endblock %}
+
+{% block extra_head %}
+<style>
+    .chat-container {
+        height: calc(100vh - 200px);
+        min-height: 500px;
+    }
+    
+    .chat-messages {
+        height: 400px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        background-color: #f8f9fa;
+    }
+    
+    .message {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        max-width: 80%;
+        word-wrap: break-word;
+    }
+    
+    .message.user {
+        background-color: #007bff;
+        color: white;
+        margin-left: auto;
+        margin-right: 1rem;
+    }
+    
+    .message.assistant {
+        background-color: white;
+        border: 1px solid #dee2e6;
+        margin-left: 1rem;
+        margin-right: auto;
+    }
+    
+    .message.system {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        text-align: center;
+        margin: 0 auto;
+        max-width: 60%;
+        font-size: 0.9rem;
+    }
+    
+    .typing-indicator {
+        display: none;
+        padding: 0.75rem 1rem;
+        margin-left: 1rem;
+        max-width: 100px;
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+    }
+    
+    .typing-dots {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+    }
+    
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #6c757d;
+        animation: typing 1.4s infinite ease-in-out;
+    }
+    
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes typing {
+        0%, 60%, 100% { opacity: 0.3; }
+        30% { opacity: 1; }
+    }
+    
+    .confidence-badge {
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
+    
+    .source-citation {
+        background-color: #e9ecef;
+        border-radius: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+    
+    .example-queries .example-item {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .example-queries .example-item:hover {
+        background-color: #f8f9fa;
+        border-color: #007bff !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Main Chat Area -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-comments me-2"></i>
+                            Legal Consultation Chat
+                        </h5>
+                        <div class="chat-status">
+                            {% if system_ready %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-circle"></i> Ready
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-hourglass-half"></i> Initializing
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body d-flex flex-column chat-container">
+                    <!-- Chat Messages -->
+                    <div id="chat-messages" class="chat-messages flex-grow-1 mb-3 p-3">
+                        <div class="message system">
+                            <i class="fas fa-robot me-2"></i>
+                            Welcome to BNS Legal Assistant! I'm here to help you with questions about the Bharatiya Nyaya Sanhita (BNS) 2023.
+                            <br><br>
+                            <small class="text-muted">
+                                Ask me about definitions, penalties, procedures, or specific BNS sections. 
+                                Remember: This is for informational purposes only and not legal advice.
+                            </small>
+                        </div>
+                        
+                        <!-- System status message if not ready -->
+                        {% if not system_ready %}
+                        <div class="message system">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            {{ initialization_status.message }}
+                            <br><small class="text-muted">Please wait while the system initializes...</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Typing Indicator -->
+                    <div id="typing-indicator" class="typing-indicator">
+                        <div class="typing-dots">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Input Area -->
+                    <div class="input-group">
+                        <textarea id="query-input" class="form-control" 
+                                placeholder="Ask your legal question here..." 
+                                rows="2" 
+                                maxlength="1000"
+                                {% if not system_ready %}disabled{% endif %}></textarea>
+                        <button id="send-button" class="btn btn-primary px-4" type="button"
+                                {% if not system_ready %}disabled{% endif %}>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Character Counter -->
+                    <div class="text-end mt-1">
+                        <small class="text-muted">
+                            <span id="char-counter">0</span>/1000 characters
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Session Info -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Session Info
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 text-center">
+                        <div class="col-6">
+                            <div class="fw-bold text-primary" id="questions-count">0</div>
+                            <small class="text-muted">Questions</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="fw-bold text-success" id="avg-confidence">0%</div>
+                            <small class="text-muted">Avg Confidence</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <small class="text-muted">
+                            Session ID: <span id="session-id">{{ session_id }}</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Example Queries -->
+            <div class="card example-queries">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Example Queries
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for example in example_queries %}
+                    <div class="example-item border rounded p-2 mb-2" onclick="useExampleQuery('{{ example.query }}')">
+                        <div class="fw-bold text-primary">{{ example.category }}</div>
+                        <div class="small">{{ example.query }}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">{{ example.description }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="clearChat()">
+                            <i class="fas fa-broom me-1"></i>Clear Chat
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" onclick="checkSystemStatus()">
+                            <i class="fas fa-heartbeat me-1"></i>System Status
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="downloadChatHistory()">
+                            <i class="fas fa-download me-1"></i>Download Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Legal Disclaimer -->
+            <div class="card mt-3 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Disclaimer
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        This system provides general legal information only. Always consult qualified 
+                        legal professionals for specific legal advice and representation.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+<script>
+// Initialize chat functionality
+document.addEventListener('DOMContentLoaded', function() {
+    initializeChat();
+    
+    // Auto-refresh if system is still initializing
+    {% if not system_ready %}
+    const refreshInterval = setInterval(() => {
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.ready_for_queries) {
+                    clearInterval(refreshInterval);
+                    location.reload();
+                }
+            })
+            .catch(error => console.log('Status check failed:', error));
+    }, 5000);
+    {% endif %}
+});
+
+function useExampleQuery(query) {
+    const queryInput = document.getElementById('query-input');
+    queryInput.value = query;
+    queryInput.focus();
+    
+    // Auto-submit if system is ready
+    {% if system_ready %}
+    setTimeout(() => {
+        sendQuery();
+    }, 500);
+    {% endif %}
+}
+
+function clearChat() {
+    const messagesContainer = document.getElementById('chat-messages');
+    messagesContainer.innerHTML = `
+        <div class="message system">
+            <i class="fas fa-robot me-2"></i>
+            Chat cleared. How can I help you with BNS legal questions?
+        </div>
+    `;
+    
+    // Reset session stats
+    document.getElementById('questions-count').textContent = '0';
+    document.getElementById('avg-confidence').textContent = '0%';
+    
+    // Clear chat history
+    chatHistory = [];
+    sessionStats = { questions: 0, totalConfidence: 0 };
+}
+
+function downloadChatHistory() {
+    if (chatHistory.length === 0) {
+        alert('No chat history to download.');
+        return;
+    }
+    
+    let content = 'BNS Legal Assistant - Chat History\\n';
+    content += '='.repeat(50) + '\\n\\n';
+    
+    chatHistory.forEach((entry, index) => {
+        content += `Question ${index + 1}:\\n${entry.query}\\n\\n`;
+        content += `Answer (Confidence: ${Math.round(entry.confidence * 100)}%):\\n${entry.answer}\\n\\n`;
+        if (entry.sections_cited && entry.sections_cited.length > 0) {
+            content += `Sections Cited: ${entry.sections_cited.join(', ')}\\n\\n`;
+        }
+        content += '-'.repeat(30) + '\\n\\n';
+    });
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bns-chat-history-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}
